@@ -726,6 +726,16 @@ canvas { display: block; width: 100%; }
 @media(max-width:540px){
   .stats-row{grid-template-columns:repeat(2,1fr);}
 }
+
+/* 테마 칩 */
+.theme-chip {
+  font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;
+  background:var(--s2);border:1.5px solid var(--border);color:var(--muted);
+  cursor:pointer;transition:all .15s;
+}
+.theme-chip.active {
+  background:var(--accent);border-color:var(--accent);color:#fff;
+}
 </style>
 </head>
 <body>
@@ -774,6 +784,7 @@ canvas { display: block; width: 100%; }
     <button class="tab" id="tab-risk" onclick="switchTab('risk')">⚖️ 리스크</button>
     <button class="tab" id="tab-rules" onclick="switchTab('rules')">📋 매매규칙</button>
     <button class="tab" id="tab-goals" onclick="switchTab('goals')">🎯 목표</button>
+    <button class="tab" id="tab-events" onclick="switchTab('events')">🔔 이벤트</button>
   </div>
 </div>
 
@@ -787,6 +798,7 @@ canvas { display: block; width: 100%; }
     <button class="bnav-btn" id="bnav-stats" onclick="switchTab('stats')"><span class="bnav-ico">🏆</span>통계</button>
     <button class="bnav-btn" id="bnav-report" onclick="switchTab('report')"><span class="bnav-ico">📄</span>매매</button>
     <button class="bnav-btn" id="bnav-review-report" onclick="switchTab('review-report')"><span class="bnav-ico">📋</span>복기</button>
+    <button class="bnav-btn" id="bnav-events" onclick="switchTab('events')"><span class="bnav-ico">🔔</span>이벤트</button>
     <button class="bnav-btn" id="bnav-risk" onclick="switchTab('risk')"><span class="bnav-ico">⚖️</span>도구</button>
   </div>
 </nav>
@@ -1644,6 +1656,19 @@ canvas { display: block; width: 100%; }
   </div>
 </div>
 
+<!-- ── 이벤트 ── -->
+<div id="view-events" style="display:none">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="fi btn-xs" id="ef-all" onclick="setEvtFilter('all')" style="padding:6px 12px;font-size:12px;border-radius:20px;background:var(--accent);color:#fff;border:none;cursor:pointer">전체</button>
+      <button class="fi btn-xs" id="ef-upcoming" onclick="setEvtFilter('upcoming')" style="padding:6px 12px;font-size:12px;border-radius:20px;background:var(--s2);color:var(--text);border:1px solid var(--border);cursor:pointer">다가오는</button>
+      <button class="fi btn-xs" id="ef-past" onclick="setEvtFilter('past')" style="padding:6px 12px;font-size:12px;border-radius:20px;background:var(--s2);color:var(--text);border:1px solid var(--border);cursor:pointer">지난</button>
+    </div>
+    <button class="btn btn-primary btn-sm" onclick="openEventModal()">+ 이벤트 추가</button>
+  </div>
+  <div id="events-list"></div>
+</div>
+
 <!-- ── 목표 ── -->
 <div id="view-goals" style="display:none">
   <div id="goals-roadmap" style="margin-bottom:14px"></div>
@@ -1671,6 +1696,75 @@ canvas { display: block; width: 100%; }
   <div id="goals-summary" style="margin-top:14px"></div>
 </div>
 
+
+
+<!-- ── 이벤트 추가/수정 모달 ── -->
+<div class="backdrop" id="m-event" onclick="backdropClose(this,event)">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-hdr">
+      <span class="modal-title" id="event-modal-title">🔔 이벤트 추가</span>
+      <button class="xbtn" onclick="cm('m-event')">×</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px;padding:4px 0">
+      <div class="fg">
+        <label class="flbl">제목 *</label>
+        <input class="fi" id="ev-title" placeholder="삼성전자 실적발표, 대법원 판결 등">
+      </div>
+      <div class="fg">
+        <label class="flbl">날짜 *</label>
+        <input class="fi" type="date" id="ev-date">
+      </div>
+      <div class="fg">
+        <label class="flbl">카테고리</label>
+        <select class="fi" id="ev-category">
+          <option value="earnings">📊 실적발표</option>
+          <option value="court">⚖️ 법원/규제</option>
+          <option value="disclosure">📢 공시/발표</option>
+          <option value="macro">🌍 거시경제</option>
+          <option value="dividend">💰 배당</option>
+          <option value="etc">📌 기타</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label class="flbl">테마</label>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px" id="ev-theme-chips">
+          <button type="button" class="theme-chip" data-theme="AI반도체" onclick="toggleThemeChip(this)">AI반도체</button>
+          <button type="button" class="theme-chip" data-theme="2차전지" onclick="toggleThemeChip(this)">2차전지</button>
+          <button type="button" class="theme-chip" data-theme="바이오" onclick="toggleThemeChip(this)">바이오</button>
+          <button type="button" class="theme-chip" data-theme="방산" onclick="toggleThemeChip(this)">방산</button>
+          <button type="button" class="theme-chip" data-theme="로봇" onclick="toggleThemeChip(this)">로봇</button>
+          <button type="button" class="theme-chip" data-theme="원전" onclick="toggleThemeChip(this)">원전</button>
+          <button type="button" class="theme-chip" data-theme="조선" onclick="toggleThemeChip(this)">조선</button>
+          <button type="button" class="theme-chip" data-theme="반도체" onclick="toggleThemeChip(this)">반도체</button>
+          <button type="button" class="theme-chip" data-theme="금융" onclick="toggleThemeChip(this)">금융</button>
+          <button type="button" class="theme-chip" data-theme="헬스케어" onclick="toggleThemeChip(this)">헬스케어</button>
+          <button type="button" class="theme-chip" data-theme="게임" onclick="toggleThemeChip(this)">게임</button>
+          <button type="button" class="theme-chip" data-theme="미국주식" onclick="toggleThemeChip(this)">미국주식</button>
+        </div>
+        <input class="fi" id="ev-theme-custom" placeholder="직접입력 (예: 수소경제, 전기차 등)" style="font-size:12px">
+      </div>
+      <div class="fg">
+        <label class="flbl">관련 종목 (쉼표로 구분)</label>
+        <input class="fi" id="ev-stocks" placeholder="삼성전자, SK하이닉스">
+      </div>
+      <div class="fg">
+        <label class="flbl">메모</label>
+        <textarea class="fi" id="ev-memo" rows="3" placeholder="이 날 주의해야 할 내용, 예상 시나리오 등" style="resize:vertical"></textarea>
+      </div>
+      <div class="fg">
+        <label class="flbl">반복</label>
+        <select class="fi" id="ev-repeat">
+          <option value="none">반복 없음</option>
+          <option value="yearly">매년 반복</option>
+        </select>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:16px">
+      <button class="btn btn-outline" style="flex:1" onclick="cm('m-event')">취소</button>
+      <button class="btn btn-primary" style="flex:2" onclick="saveEvent()">저장</button>
+    </div>
+  </div>
+</div>
 
 <!-- ── 종목코드 일괄입력 모달 ── -->
 <div class="backdrop" id="m-bulk-ticker" onclick="backdropClose(this,event)">
@@ -2458,8 +2552,23 @@ async function loadData() {
   try { const _r = localStorage.getItem('tl-v4-tmpl'); if(_r) templates = JSON.parse(_r); } catch(e) { templates=[]; }
   try { const _r = localStorage.getItem('tl-rules'); if(_r) { const d=JSON.parse(_r); rules=d.rules||[]; violations=d.violations||[]; checkState=d.checkState||{entry:{},exit:{}}; } } catch(e) {}
   try { const _r = localStorage.getItem('tl-goals'); if(_r) goals = JSON.parse(_r); } catch(e) { goals=[]; }
+  try { const _r = localStorage.getItem('tl-events'); if(_r) events = JSON.parse(_r); } catch(e) { events=[]; }
   await loadFunds();
   loadJournals();
+  // 이벤트 샘플 데이터 (첫 실행 시)
+  if(!events.length && !localStorage.getItem('tl-events-sample')) {
+    const _uid2 = () => Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+    const _addDays = (d) => { const dt=new Date(); dt.setDate(dt.getDate()+d); return dt.toISOString().slice(0,10); };
+    events = [
+      { id:_uid2(), title:'삼성전자 1분기 실적발표', date:_addDays(12), category:'earnings', stocks:'삼성전자', memo:'매출·영업이익 컨센서스 대비 확인 필요', repeat:'none', themes:['반도체','AI반도체'] },
+      { id:_uid2(), title:'SK하이닉스 주주총회', date:_addDays(25), category:'disclosure', stocks:'SK하이닉스', memo:'배당 결의 및 사업보고서 주목', repeat:'none', themes:['반도체'] },
+      { id:_uid2(), title:'미국 FOMC 금리결정', date:_addDays(7), category:'macro', stocks:'', memo:'금리 동결 여부 및 점도표 확인', repeat:'none', themes:['미국주식','금융'] },
+      { id:_uid2(), title:'카카오 공정위 제재 결과', date:_addDays(33), category:'court', stocks:'카카오', memo:'플랫폼 독점 관련 결과에 따라 변동성 주의', repeat:'none', themes:['게임'] },
+      { id:_uid2(), title:'삼성전자 배당락일', date:_addDays(60), category:'dividend', stocks:'삼성전자', memo:'매년 3월 배당락 — 보유 여부 결정 필요', repeat:'yearly', themes:['반도체'] },
+    ];
+    saveEvents();
+    localStorage.setItem('tl-events-sample','1');
+  }
   // 샘플 데이터 (첫 실행 시)
   if(!positions.length && !localStorage.getItem('tl-no-sample')) {
     const _uid = () => Date.now().toString(36)+Math.random().toString(36).slice(2,5);
@@ -2566,9 +2675,14 @@ function renderCalendar() {
   const today = td();
 
   // ── 날짜별 데이터 수집 ──
-  // dayData[dateStr] = { buys:[], sells:[], realPnL:0, unrealPnL:0 }
+  // dayData[dateStr] = { buys:[], sells:[], realPnL:0, unrealPnL:0, events:[] }
   const dayData = {};
-  const ensureDay = d => { if(!dayData[d]) dayData[d]={buys:[],sells:[],realPnL:0,unrealPnL:0}; return dayData[d]; };
+  const ensureDay = d => { if(!dayData[d]) dayData[d]={buys:[],sells:[],realPnL:0,unrealPnL:0,events:[]}; return dayData[d]; };
+
+  // 이벤트 수집
+  getEffectiveEvents().filter(e => e.date.slice(0,7) === ym0).forEach(e => {
+    ensureDay(e.date).events.push(e);
+  });
 
   positions.forEach(pos => {
     const c = calcPos(pos);
@@ -2656,6 +2770,16 @@ function renderCalendar() {
       curWeek.realPnL   += dd.realPnL;
       curWeek.unrealPnL += dd.unrealPnL;
       curWeek.tradeCnt  += dd.buys.length + dd.sells.length;
+    }
+
+    // 이벤트 표시
+    if(dd && dd.events && dd.events.length) {
+      const EVT_ICONS = {earnings:'📊',court:'⚖️',disclosure:'📢',macro:'🌍',dividend:'💰',etc:'📌'};
+      dd.events.forEach(ev => {
+        const ico = EVT_ICONS[ev.category] || '📌';
+        const themes = ev.themes && ev.themes.length ? ` ${ev.themes[0]}` : '';
+        inner += `<div style="font-size:9px;margin-top:2px;padding:1px 4px;background:var(--accent)22;border-left:2px solid var(--accent);border-radius:0 3px 3px 0;color:var(--accent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${ev.title}">${ico}${themes} ${ev.title}</div>`;
+      });
     }
 
     cells += `<div class="${cls}" onclick="openDayDetail('${dateStr}')">${inner}</div>`;
@@ -2786,6 +2910,9 @@ async function saveTmplStore() {
 async function saveRules() {
   try { localStorage.setItem('tl-rules', JSON.stringify({rules, violations, checkState})); } catch(e) {}
 }
+async function saveEvents() {
+  try { localStorage.setItem('tl-events', JSON.stringify(events)); } catch(e) {}
+}
 async function saveGoalsStore() {
   try { localStorage.setItem('tl-goals', JSON.stringify(goals)); } catch(e) {}
 }
@@ -2793,6 +2920,7 @@ let rules = [];
 let violations = [];
 let goals = [];
 let checkState = { entry: {}, exit: {} };
+let events = []; // { id, date, title, category, stocks, memo, repeat }
 
 const DEFAULT_ENTRY_CHECKS = [
   '추세 방향을 확인했다 (일봉/주봉)',
@@ -3846,6 +3974,264 @@ function getGoalProgress(g) {
   }
 }
 
+
+// ═══════════════════════ 이벤트 기능 ═══════════════════════
+let _evtFilter = 'all';
+let _editingEventId = null;
+
+// 테마 헬퍼 함수
+function toggleThemeChip(btn) {
+  btn.classList.toggle('active');
+}
+
+function setEventThemes(themes) {
+  // 칩 초기화
+  document.querySelectorAll('.theme-chip').forEach(b => {
+    b.classList.toggle('active', themes.includes(b.dataset.theme));
+  });
+  // 직접입력: 미리정의 목록에 없는 것만
+  const presets = Array.from(document.querySelectorAll('.theme-chip')).map(b => b.dataset.theme);
+  const custom = themes.filter(t => !presets.includes(t));
+  document.getElementById('ev-theme-custom').value = custom.join(', ');
+}
+
+function getSelectedThemes() {
+  const chips = Array.from(document.querySelectorAll('.theme-chip.active')).map(b => b.dataset.theme);
+  const custom = document.getElementById('ev-theme-custom').value
+    .split(',').map(s=>s.trim()).filter(Boolean);
+  return [...new Set([...chips, ...custom])];
+}
+
+function getEventThemes(e) {
+  return e.themes && e.themes.length ? e.themes : [];
+}
+
+const EVT_CAT = {
+  earnings:    { label:'실적발표', icon:'📊', color:'#3b82f6' },
+  court:       { label:'법원/규제', icon:'⚖️', color:'#ef4444' },
+  disclosure:  { label:'공시/발표', icon:'📢', color:'#f59e0b' },
+  macro:       { label:'거시경제', icon:'🌍', color:'#8b5cf6' },
+  dividend:    { label:'배당',     icon:'💰', color:'#10b981' },
+  etc:         { label:'기타',     icon:'📌', color:'#6b7280' },
+};
+
+function setEvtFilter(f) {
+  _evtFilter = f;
+  ['all','upcoming','past'].forEach(k => {
+    const b = document.getElementById('ef-'+k);
+    if (!b) return;
+    if (k === f) { b.style.background='var(--accent)'; b.style.color='#fff'; b.style.border='none'; }
+    else { b.style.background='var(--s2)'; b.style.color='var(--text)'; b.style.border='1px solid var(--border)'; }
+  });
+  renderEvents();
+}
+
+function getEffectiveEvents() {
+  const today = td();
+  let list = [];
+  events.forEach(e => {
+    list.push({...e});
+    if (e.repeat === 'yearly') {
+      const thisYear = today.slice(0,4);
+      const nextYear = String(parseInt(thisYear)+1);
+      [thisYear, nextYear].forEach(yr => {
+        const d = yr + e.date.slice(4);
+        if (d !== e.date) list.push({...e, id: e.id+'_'+yr, date: d, _virtual: true});
+      });
+    }
+  });
+  return list.sort((a,b) => a.date.localeCompare(b.date));
+}
+
+function dday(dateStr) {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const ev = new Date(dateStr); ev.setHours(0,0,0,0);
+  const diff = Math.round((ev - today) / 86400000);
+  if (diff === 0) return { label: 'D-Day', color: '#ef4444' };
+  if (diff > 0)  return { label: `D-${diff}`, color: diff <= 7 ? '#f59e0b' : '#3b82f6' };
+  return { label: `D+${Math.abs(diff)}`, color: '#6b7280' };
+}
+
+function renderEvents() {
+  const el = document.getElementById('events-list');
+  if (!el) return;
+  const today = td();
+  let list = getEffectiveEvents();
+
+  if (_evtFilter === 'upcoming') list = list.filter(e => e.date >= today);
+  else if (_evtFilter === 'past') list = list.filter(e => e.date < today);
+
+  if (!list.length) {
+    el.innerHTML = `<div style="text-align:center;padding:48px 24px;color:var(--muted)">
+      <div style="font-size:40px;margin-bottom:12px">🔔</div>
+      <div style="font-size:15px;font-weight:600;margin-bottom:6px;color:var(--text)">등록된 이벤트가 없어요</div>
+      <div style="font-size:12px;margin-bottom:20px">실적발표, 법원 판결, FOMC 등<br>중요한 날짜를 미리 등록해두세요</div>
+      <button class="btn btn-primary" onclick="openEventModal()">+ 첫 이벤트 추가하기</button>
+    </div>`;
+    return;
+  }
+
+  // 날짜별 그룹화
+  const groups = {};
+  list.forEach(e => {
+    const ym = e.date.slice(0,7);
+    if (!groups[ym]) groups[ym] = [];
+    groups[ym].push(e);
+  });
+
+  el.innerHTML = Object.entries(groups).map(([ym, evts]) => {
+    const [yr, mo] = ym.split('-');
+    return `<div style="margin-bottom:20px">
+      <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px;letter-spacing:1px">${yr}년 ${parseInt(mo)}월</div>
+      ${evts.map(e => renderEventCard(e)).join('')}
+    </div>`;
+  }).join('');
+}
+
+function renderEventCard(e) {
+  const cat = EVT_CAT[e.category] || EVT_CAT.etc;
+  const dd = dday(e.date);
+  const isVirtual = e._virtual;
+  const stocks = e.stocks ? e.stocks.split(',').map(s=>s.trim()).filter(Boolean) : [];
+  const themes = getEventThemes(e);
+
+  // 테마 색상 팔레트
+  const themeColors = ['#6366f1','#8b5cf6','#ec4899','#f59e0b','#10b981','#3b82f6','#ef4444','#14b8a6','#f97316','#84cc16'];
+  const themeHTML = themes.length ? `
+    <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px">
+      ${themes.map((t,i) => `<span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:${themeColors[i%themeColors.length]}22;color:${themeColors[i%themeColors.length]};border:1.5px solid ${themeColors[i%themeColors.length]}44"># ${t}</span>`).join('')}
+    </div>` : '';
+
+  const isUrgent = dd.label === 'D-Day' || (dd.label.startsWith('D-') && parseInt(dd.label.slice(2)) <= 3);
+  const borderStyle = isUrgent ? `border:2px solid ${dd.color};box-shadow:0 0 0 3px ${dd.color}22` : 'border:1.5px solid var(--border)';
+
+  return `<div style="background:var(--surface);${borderStyle};border-radius:12px;padding:12px 14px;margin-bottom:8px">
+    ${themeHTML}
+    <div style="display:flex;gap:12px;align-items:flex-start">
+      <div style="text-align:center;min-width:48px">
+        <div style="font-size:20px">${cat.icon}</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:2px">${e.date.slice(5).replace('-','/')}</div>
+      </div>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px">
+          <span style="font-weight:700;font-size:14px">${e.title}</span>
+          <span style="font-size:10px;background:${cat.color}22;color:${cat.color};padding:2px 7px;border-radius:10px;font-weight:600">${cat.label}</span>
+          ${e.repeat==='yearly' ? '<span style="font-size:10px;color:var(--muted);background:var(--s2);padding:2px 6px;border-radius:8px">🔁 매년</span>' : ''}
+        </div>
+        ${stocks.length ? `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:4px">${stocks.map(s=>`<span style="font-size:10px;background:var(--s2);border:1px solid var(--border);padding:2px 6px;border-radius:6px">${s}</span>`).join('')}</div>` : ''}
+        ${e.memo ? `<div style="font-size:12px;color:var(--muted);margin-top:2px">${e.memo}</div>` : ''}
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;min-width:52px">
+        <span style="font-size:12px;font-weight:700;color:${dd.color}">${dd.label}</span>
+        ${!isVirtual ? `<div style="display:flex;gap:4px">
+          <button onclick="openEventModal('${e.id}')" style="font-size:10px;padding:3px 7px;border-radius:6px;background:var(--s2);border:1px solid var(--border);cursor:pointer;color:var(--text)">수정</button>
+          <button onclick="deleteEvent('${e.id}')" style="font-size:10px;padding:3px 7px;border-radius:6px;background:var(--s2);border:1px solid var(--border);cursor:pointer;color:var(--loss)">삭제</button>
+        </div>` : ''}
+      </div>
+    </div>
+  </div>`;
+}
+
+function openEventModal(id) {
+  _editingEventId = id || null;
+  const titleEl = document.getElementById('event-modal-title');
+  if (id) {
+    const e = events.find(x => x.id === id);
+    if (!e) return;
+    titleEl.textContent = '🔔 이벤트 수정';
+    document.getElementById('ev-title').value = e.title || '';
+    document.getElementById('ev-date').value = e.date || '';
+    document.getElementById('ev-category').value = e.category || 'etc';
+    document.getElementById('ev-stocks').value = e.stocks || '';
+    document.getElementById('ev-memo').value = e.memo || '';
+    document.getElementById('ev-repeat').value = e.repeat || 'none';
+    setEventThemes(e.themes || []);
+  } else {
+    titleEl.textContent = '🔔 이벤트 추가';
+    document.getElementById('ev-title').value = '';
+    document.getElementById('ev-date').value = td();
+    document.getElementById('ev-category').value = 'earnings';
+    document.getElementById('ev-stocks').value = '';
+    document.getElementById('ev-memo').value = '';
+    document.getElementById('ev-repeat').value = 'none';
+    setEventThemes([]);
+  }
+  om('m-event');
+}
+
+function saveEvent() {
+  const title = document.getElementById('ev-title').value.trim();
+  const date  = document.getElementById('ev-date').value;
+  if (!title) { alert('제목을 입력해주세요'); return; }
+  if (!date)  { alert('날짜를 입력해주세요'); return; }
+
+  const obj = {
+    id:       _editingEventId || (Date.now().toString(36)+Math.random().toString(36).slice(2,5)),
+    title,
+    date,
+    category: document.getElementById('ev-category').value,
+    stocks:   document.getElementById('ev-stocks').value.trim(),
+    memo:     document.getElementById('ev-memo').value.trim(),
+    repeat:   document.getElementById('ev-repeat').value,
+    themes:   getSelectedThemes(),
+  };
+
+  if (_editingEventId) {
+    const idx = events.findIndex(e => e.id === _editingEventId);
+    if (idx >= 0) events[idx] = obj;
+  } else {
+    events.push(obj);
+  }
+  saveEvents();
+  cm('m-event');
+  renderEvents();
+  renderHome();
+  showToast('✅ 이벤트 저장 완료');
+}
+
+function deleteEvent(id) {
+  if (!confirm('이벤트를 삭제할까요?')) return;
+  events = events.filter(e => e.id !== id);
+  saveEvents();
+  renderEvents();
+  renderHome();
+  showToast('🗑 이벤트 삭제됨');
+}
+
+function renderUpcomingEventsWidget() {
+  const today = td();
+  const upcoming = getEffectiveEvents()
+    .filter(e => e.date >= today)
+    .slice(0, 5);
+
+  const body = !upcoming.length
+    ? `<div style="text-align:center;padding:16px;color:var(--muted);font-size:13px">다가오는 이벤트 없음</div>`
+    : upcoming.map(e => {
+        const cat = EVT_CAT[e.category] || EVT_CAT.etc;
+        const dd = dday(e.date);
+        const urgentBorder = dd.label === 'D-Day' || (dd.label.startsWith('D-') && parseInt(dd.label.slice(2))<=3) ? `border:1.5px solid ${dd.color}` : 'border:1.5px solid var(--border)';
+        return `<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--s2);border-radius:8px;${urgentBorder}">
+          <span style="font-size:16px">${cat.icon}</span>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${e.title}</div>
+            <div style="font-size:11px;color:var(--muted)">${e.date}${e.stocks ? ' · '+e.stocks : ''}</div>
+          </div>
+          <span style="font-size:12px;font-weight:700;color:${dd.color};white-space:nowrap">${dd.label}</span>
+        </div>`;
+      }).join('');
+
+  return `<div class="section">
+    <div class="sec-hdr">
+      <span class="sec-title">🔔 다가오는 이벤트</span>
+      <button class="btn btn-outline btn-xs" onclick="switchTab('events')">전체보기</button>
+    </div>
+    <div style="padding:10px 14px;display:flex;flex-direction:column;gap:6px">
+      ${body}
+      <button class="btn btn-outline btn-sm" style="width:100%;margin-top:4px" onclick="openEventModal()">+ 이벤트 추가</button>
+    </div>
+  </div>`;
+}
+
 function renderGoals() {
   const closed = positions.filter(p => p.status === 'closed');
   const holding = positions.filter(p => p.status === 'holding');
@@ -4312,6 +4698,9 @@ function renderHome() {
             </div>`;}).join('')}
         </div>
       </div>` : ''}
+
+      <!-- 🔔 다가오는 이벤트 위젯 -->
+      ${renderUpcomingEventsWidget()}
     </div>
   </div>`;
 }
@@ -4909,7 +5298,7 @@ function saveToFile() {
   btn.textContent = '💾 저장 중...';
 
   // 모든 데이터 통합
-  const dataJson = JSON.stringify({ positions, templates, rules, violations, checkState, goals, accounts, txList, interestList });
+  const dataJson = JSON.stringify({ positions, templates, rules, violations, checkState, goals, events, journals, accounts, txList, interestList });
   let html = document.documentElement.outerHTML;
 
   // 태그명을 변수로 조합해서 파서 오인 방지
@@ -5002,7 +5391,7 @@ const TAB_GROUP = {
   home:'trade', holding:'trade', closed:'trade', funds:'trade', calendar:'trade',
   analytics:'analysis', report:'analysis', 'review-report':'analysis', journal:'analysis',
   timeline:'analysis', compare:'analysis',
-  risk:'tools', rules:'tools', goals:'tools',
+  risk:'tools', rules:'tools', goals:'tools', events:'tools',
 };
 let currentGroup = 'trade';
 
@@ -5031,7 +5420,7 @@ function switchTab(tab) {
     });
   }
   // 뷰 전환
-  ['home','holding','closed','analytics','calendar','report','review-report','funds','risk','rules','goals','journal','timeline','compare'].forEach(t => {
+  ['home','holding','closed','analytics','calendar','report','review-report','funds','risk','rules','goals','events','journal','timeline','compare'].forEach(t => {
     const v=document.getElementById('view-'+t); if(v) v.style.display=t===tab?'':'none';
     const tb=document.getElementById('tab-'+t); if(tb) tb.classList.toggle('active',t===tab);
     const nb=document.getElementById('bnav-'+t); if(nb) nb.classList.toggle('active',t===tab);
@@ -5047,6 +5436,7 @@ function switchTab(tab) {
   else if(tab==='risk') renderRisk();
   else if(tab==='rules') renderRules();
   else if(tab==='goals') renderGoals();
+  else if(tab==='events') renderEvents();
   else if(tab==='journal') renderJournal();
     else if(tab==='compare') renderCompare();
   else if(tab==='home') renderHome();
@@ -5127,6 +5517,7 @@ function renderAll() {
   else if(currentTab==='risk') renderRisk();
   else if(currentTab==='rules') renderRules();
   else if(currentTab==='goals') renderGoals();
+  else if(currentTab==='events') renderEvents();
 }
 
 function backdropClose(backdrop, e) {
@@ -6746,6 +7137,21 @@ function openEditPos(posId) {
         </div>`).join('')}` : '<div style="font-size:12px;color:var(--muted)">거래 내역 없음</div>';
   }
   om('m-editpos');
+  setTimeout(() => {
+    const nameEl = document.getElementById('ep-name');
+    const tickerEl = document.getElementById('ep-ticker');
+    const mktEl = document.getElementById('ep-market');
+    if(nameEl) {
+      nameEl.addEventListener('input', () => {
+        showStockDropdown(nameEl, s => {
+          nameEl.value = s.name;
+          if(tickerEl) tickerEl.value = s.code;
+          if(mktEl) { mktEl.value = s.mkt==='US'?'US':'KRX'; mktEl.dispatchEvent(new Event('change')); }
+        });
+      });
+      nameEl.addEventListener('blur', () => setTimeout(closeStockDropdown, 150));
+    }
+  }, 50);
 }
 
 function saveEditPos() {
@@ -7007,7 +7413,8 @@ function doRestore() {
   journals  = data.journals  || [];
   goals     = data.goals     || [];
   rules     = data.rules     || [];
-  savePos(); saveTmplStore(); saveGoalsStore(); saveRules();
+  events    = data.events    || [];
+  savePos(); saveTmplStore(); saveGoalsStore(); saveRules(); saveEvents(); saveJournals();
   cm('m-json-restore');
   renderAll();
   showToast('✅ 복원 완료! ' + positions.length + '개 포지션');
